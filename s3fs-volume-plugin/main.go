@@ -1,12 +1,12 @@
 package main
 
 import (
+	mountedvolume "docker-volume-plugins/mounted-volume"
 	"os"
 	"os/exec"
 	"strings"
 
 	"github.com/docker/go-plugins-helpers/volume"
-	mountedvolume "github.com/marcelo-ochoa/docker-volume-plugins/mounted-volume"
 )
 
 type s3fsDriver struct {

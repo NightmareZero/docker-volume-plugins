@@ -11,16 +11,21 @@ RUN apt update && \
 COPY s3fs-volume-plugin/rsyslog.conf /etc/rsyslog.conf
 COPY s3fs-volume-plugin/fuse.conf /etc/fuse.conf
 
+
 ARG GO_VERSION
 FROM --platform=${TARGETPLATFORM:-linux/amd64} golang:${GO_VERSION:-1.15.10}-alpine as dev
 
-RUN apk update && apk add git
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.tuna.tsinghua.edu.cn/g' /etc/apk/repositories && \
+    apk update && apk add git
 
+COPY ./go.* /go/src/github.com/marcelo-ochoa/docker-volume-plugins/
 COPY s3fs-volume-plugin/ /go/src/github.com/marcelo-ochoa/docker-volume-plugins/s3fs-volume-plugin
 COPY mounted-volume/ /go/src/github.com/marcelo-ochoa/docker-volume-plugins/mounted-volume
+COPY vendor/ /go/src/github.com/marcelo-ochoa/docker-volume-plugins/vendor
 
 RUN cd /go/src/github.com/marcelo-ochoa/docker-volume-plugins/s3fs-volume-plugin && \
-    CGO_ENABLED=0 GOOS=linux go get
+    CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o /go/bin/s3fs-volume-plugin
+
 
 FROM base
 

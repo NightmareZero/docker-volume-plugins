@@ -233,16 +233,17 @@ func (p *Driver) Mount(req *volume.MountRequest) (*volume.MountResponse, error) 
 		args = append(args, mountPoint)
 		args = append(args, volumeInfo.Args...)
 	}
-	log.Println(args)
+	fmt.Printf("do mount, cmd:%s args %+v\n", p.mountExecutable, args)
 	cmd := exec.Command(p.mountExecutable, args...)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		fmt.Printf("Command output: %s\n", out)
 		return &volume.MountResponse{}, fmt.Errorf("error mounting %s: %s", req.Name, err.Error())
 	} else {
 		cmd := exec.Command("df", "--output=fstype", mountPoint)
-		if out, err := cmd.CombinedOutput(); err != nil || strings.Index(string(out), p.mountExecutable) < 0 {
+		if out, err := cmd.CombinedOutput(); err != nil || !strings.Contains(string(out), p.mountExecutable) {
 			fmt.Printf("df --output=fstype: %s\n", out)
-			return &volume.MountResponse{}, fmt.Errorf("error mounting %s:\n%s\nfstype should be %s", req.Name, out, p.mountExecutable)
+			return &volume.MountResponse{}, fmt.Errorf("\nerror mounting %s on %s:\nreturns \"%s\" \nfstype should be %s\n err: %+v",
+				req.Name, mountPoint, out, p.mountExecutable, err)
 		}
 	}
 	volumeInfo.MountPoint = mountPoint
